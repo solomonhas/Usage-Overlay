@@ -3,6 +3,10 @@ Program to keep track of hardware metrics.
 
 ## Running
 
-'''bash
+## Installation
+
+To install the required dependencies, run the following command:
+
+```bash
 pip install -r requirements.txt
-'''
+```
