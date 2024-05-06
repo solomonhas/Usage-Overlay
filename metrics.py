@@ -1,36 +1,25 @@
-import psutil
-import time
+import clr # the pythonnet module.
+import os
 
-def get_cpu_temp():
-    return psutil.sensors_temperatures()['coretemp'][0].current
 
-def get_gpu_temp():
-    try:
-        import nvidia_smi
-        nvidia_smi.nvmlInit()
-        handle = nvidia_smi.nvmlDeviceGetHandleByIndex(0)
-        temp = nvidia_smi.nvmlDeviceGetTemperature(handle, nvidia_smi.NVML_TEMPERATURE_GPU)
-        nvidia_smi.nvmlShutdown()
-        return temp
-    except ImportError:
-        return None
+# Get the current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-def main():
-    try:
-        while True:
-            cpu_temp = get_cpu_temp()
-            gpu_temp = get_gpu_temp()
-            if cpu_temp:
-                print(f"CPU Temperature: {cpu_temp}°C", end='\t')
-            else:
-                print("CPU Temperature: N/A", end='\t')
-            if gpu_temp is not None:
-                print(f"GPU Temperature: {gpu_temp}°C")
-            else:
-                print("GPU Temperature: N/A")
-            time.sleep(5)  # Update interval in seconds
-    except KeyboardInterrupt:
-        print("\nMonitoring stopped.")
+# Add the reference to the local copy of the DLL
+dll_path = os.path.join(current_dir, 'OpenHardwareMonitor/OpenHardwareMonitorLib.dll')
+clr.AddReference(dll_path)
 
-if __name__ == "__main__":
-    main()
+# e.g. clr.AddReference(r'OpenHardwareMonitor/OpenHardwareMonitorLib'), without .dll
+
+from OpenHardwareMonitor.Hardware import Computer
+
+c = Computer()
+c.CPUEnabled = True # get the Info about CPU
+c.GPUEnabled = True # get the Info about GPU
+c.Open()
+while True:
+    for a in range(0, len(c.Hardware[0].Sensors)):
+        # print(c.Hardware[0].Sensors[a].Identifier)
+        if "/temperature" in str(c.Hardware[0].Sensors[a].Identifier):
+            print(c.Hardware[0].Sensors[a].get_Value())
+            c.Hardware[0].Update()
